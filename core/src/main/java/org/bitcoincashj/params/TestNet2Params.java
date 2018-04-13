@@ -32,7 +32,7 @@ public class TestNet2Params extends AbstractBitcoinNetParams {
     public TestNet2Params() {
         super();
         id = ID_TESTNET;
-        packetMagic = 0xfabfb5daL;
+        packetMagic = 0xdab5bffa;
         port = 18333;
         addressHeader = 111;
         p2shHeader = 196;
