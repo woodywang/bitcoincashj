@@ -61,8 +61,7 @@ public class TransactionInput extends ChildMessage {
     // The Script object obtained from parsing scriptBytes. Only filled in on demand and if the transaction is not
     // coinbase.
     private WeakReference<Script> scriptSig;
-    /** Value of the output connected to the input, if known. This field does not participate in equals()/hashCode(). */
-    @Nullable
+    /** Value of the output connected to the input. */
     private Coin value;
 
     /**

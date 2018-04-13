@@ -53,13 +53,13 @@ public class BCCTest {
         Transaction tx = new Transaction(PARAMS);
         Script redeemScript = ScriptBuilder.createRedeemScript(2, keys);
 
-        tx.addInput(new Sha256Hash("a7686b3919526a6e733ccd1a2413f517ae44bb01a31cb4d2caaa173dc69b6b85"), 1, scriptPubKey);
+        tx.addInput(new Sha256Hash("a7686b3919526a6e733ccd1a2413f517ae44bb01a31cb4d2caaa173dc69b6b85"), 1, scriptPubKey, Coin.valueOf(100000000L));
         tx.addOutput(Coin.valueOf(0, 99), destAddress);
 
 
         List<TransactionSignature> signatures = new ArrayList<TransactionSignature>();
         for (ECKey key : keys) {
-            Sha256Hash hash = tx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false, 100000000L);
+            Sha256Hash hash = tx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
             ECKey.ECDSASignature sig = key.sign(hash);
             TransactionSignature signature = new TransactionSignature(sig, Transaction.SigHash.ALL, false, true);
             signatures.add(signature);
@@ -74,7 +74,7 @@ public class BCCTest {
 
         for (int i = 0; i < keys.size(); i++) {
             ECKey key = keys.get(i);
-            Sha256Hash hash = tx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false, 100000000L);
+            Sha256Hash hash = tx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
             ECKey.ECDSASignature sig = key.sign(hash);
             TransactionSignature signature = new TransactionSignature(sig, Transaction.SigHash.ALL, false, true);
 
@@ -105,10 +105,10 @@ public class BCCTest {
 
         Transaction tx = new Transaction(PARAMS);
         tx.setVersion(2);
-        tx.addInput(new Sha256Hash("c3d8c742bccfc40161bcd4288727d5b77ce653aa483c89ad9090f95c844c89ed"), 0, scriptPubKey);
+        tx.addInput(new Sha256Hash("c3d8c742bccfc40161bcd4288727d5b77ce653aa483c89ad9090f95c844c89ed"), 0, scriptPubKey, Coin.valueOf(100000000L));
         tx.addOutput(Coin.valueOf(0, 99), destAddress);
 
-        Sha256Hash hash = tx.hashForSignature(0, scriptPubKey, Transaction.SigHash.ALL, false, 100000000L);
+        Sha256Hash hash = tx.hashForSignature(0, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature sig = ecKey.sign(hash);
 
         TransactionSignature signature = new TransactionSignature(sig, Transaction.SigHash.ALL, false, true);

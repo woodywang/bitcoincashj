@@ -790,6 +790,14 @@ public class Transaction extends ChildMessage {
     }
 
     /**
+     * Create and add an input with value, designed for Bitcoin Cash.
+     * @return the new input.
+     */
+    public TransactionInput addInput(Sha256Hash spendtxHash, long outputIndex, Script script, Coin value) {
+        return addInput(new TransactionInput(params, this, script.getProgram(), new TransactionOutPoint(params, outputIndex, spendtxHash), value));
+    }
+
+    /**
      * Adds a new and fully signed input for the given parameters. Note that this method is <b>not</b> thread safe
      * and requires external synchronization. Please refer to general documentation on Bitcoin scripting and contracts
      * to understand the values of sigHash and anyoneCanPay: otherwise you can use the other form of this method
@@ -987,7 +995,7 @@ public class Transaction extends ChildMessage {
     public Sha256Hash hashForSignature(int inputIndex, byte[] redeemScript,
                                                     SigHash type, boolean anyoneCanPay) {
         int sigHashType = TransactionSignature.calcSigHashValue(type, anyoneCanPay, true);
-        return hashForSignature(inputIndex, new Script(redeemScript), sigHashType);
+        return hashForSignature(inputIndex, redeemScript, sigHashType);
     }
 
     /**
@@ -1010,20 +1018,12 @@ public class Transaction extends ChildMessage {
         return hashForSignature(inputIndex, redeemScript, sigHash);
     }
 
-    /**
-     * Bitcoin Cash (BCC) signature algorithm.
-     *
-     * Calculate a signature hash to support BUIP-HF Digest for replay protected signature verification.
-     * Reference: https://github.com/Bitcoin-ABC/bitcoin-abc/blob/master/doc/abc/replay-protected-sighash.md
-     *
-     * @param inputIndex input the signature is being calculated for. Tx signatures are always relative to an input.
-     * @param redeemScript the script that should be in the given input during signing.
-     * @param sigHashType Should be SigHash.ALL
-     * @return
-     */
-    public Sha256Hash hashForSignature(int inputIndex, Script redeemScript, int sigHashType) {
+    Sha256Hash hashForSignature(int inputIndex, byte[] connectedScript, int sigHashType) {
         // Amount of bitcoin spent in the input.
         // Note: you get a null (Coin) with tx.get(inputIndex), after copying this transaction
+        if (this.inputs.get(inputIndex).getValue() == null) {
+            throw new RuntimeException("Input " + inputIndex + " is invalid for Bitcoin Cash");
+        }
         long amount = this.inputs.get(inputIndex).getValue().value;
 
         // Create a copy of this transaction to operate upon because we need make changes to the inputs and outputs.
@@ -1037,7 +1037,6 @@ public class Transaction extends ChildMessage {
             tx.inputs.get(i).clearScriptBytes();
         }
 
-        byte[] connectedScript = redeemScript.getProgram();
         connectedScript = Script.removeAllInstancesOfOp(connectedScript, ScriptOpCodes.OP_CODESEPARATOR);
 
         TransactionInput input = tx.inputs.get(inputIndex);
@@ -1090,6 +1089,21 @@ public class Transaction extends ChildMessage {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Bitcoin Cash (BCC) signature algorithm.
+     *
+     * Calculate a signature hash to support BUIP-HF Digest for replay protected signature verification.
+     * Reference: https://github.com/Bitcoin-ABC/bitcoin-abc/blob/master/doc/abc/replay-protected-sighash.md
+     *
+     * @param inputIndex input the signature is being calculated for. Tx signatures are always relative to an input.
+     * @param redeemScript the script that should be in the given input during signing.
+     * @param sigHashType Should be SigHash.ALL
+     * @return
+     */
+    public Sha256Hash hashForSignature(int inputIndex, Script redeemScript, int sigHashType) {
+        return hashForSignature(inputIndex, redeemScript.getProgram(), sigHashType);
     }
 
     private Sha256Hash getPrevoutHash(Transaction tx) throws IOException {
